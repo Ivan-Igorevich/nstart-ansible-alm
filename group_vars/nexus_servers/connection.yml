@@ -1,0 +1,4 @@
+# Connection
+nexus_url: "https://nexus.nstest.local"
+nexus_user: "admin"
+ssl_validate: false

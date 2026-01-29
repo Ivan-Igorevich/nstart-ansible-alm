@@ -1,0 +1,19 @@
+---
+- name: Purge Nexus instance
+  hosts: nexus_servers
+  roles:
+    - nexus-purge
+  tags: purge
+
+- name: Bootstrap Nexus instance (install, set admin password, anonymous access)
+  hosts: nexus_servers
+  become: yes
+  roles:
+    - role: nexus-bootstrap
+      tags: boot
+
+- name: Configure Nexus (blob stores, repositories, realms, roles)
+  hosts: nexus_servers
+  roles:
+    - nexus
+  tags: configure

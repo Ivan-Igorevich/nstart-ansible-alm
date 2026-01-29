@@ -1,0 +1,29 @@
+---
+- name: Get list of all repositories
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories"
+    method: GET
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    return_content: yes
+  register: all_repos
+  changed_when: false
+  tags: [configure, clean]
+
+- name: Delete specified repositories
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/{{ item }}"
+    method: DELETE
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 204,404
+  loop: "{{ nexus_repositories_to_delete | default([]) }}"
+  vars:
+    existing_names: "{{ all_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item in existing_names
+  changed_when: false
+  tags: [configure, clean]

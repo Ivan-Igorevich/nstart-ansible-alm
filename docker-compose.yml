@@ -1,0 +1,16 @@
+services:
+  nexus:
+    container_name: nexus
+    user: root
+    image: sonatype/nexus3:latest
+    volumes:
+      - ./nexus-data:/nexus-data
+  nginx:
+    container_name: nginx-server
+    image: nginx
+    restart: always
+    ports:
+      - 8085:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nexus-nginx-data:/var/www/html

@@ -1,0 +1,5 @@
+nexus_blob_stores:
+  - name: "os"
+  - name: "dev"
+  - name: "docker"
+  - name: "llm"

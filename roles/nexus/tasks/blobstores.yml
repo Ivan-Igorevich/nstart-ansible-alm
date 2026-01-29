@@ -1,0 +1,33 @@
+---
+- name: Get list of existing blob stores
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/blobstores"
+    method: GET
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    return_content: yes
+  register: existing_blobs
+  changed_when: false
+
+- name: Create missing blob stores
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/blobstores/file"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 204,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      path: "/nexus-data/blobs/{{ item.name }}"
+    headers:
+      Content-Type: application/json
+  loop: "{{ nexus_blob_stores }}"
+  vars:
+    existing_names: "{{ existing_blobs.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  changed_when: false

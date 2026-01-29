@@ -1,0 +1,74 @@
+---
+# === 1. Очистка (должна быть сделана заранее через --tags purge) ===
+- name: Ensure required directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - ./nexus-data
+    - ./nexus-nginx-data
+
+# === 2. Создать admin.password ДО запуска контейнера ===
+- name: Create admin.password for initial setup
+  copy:
+    content: "{{ nexus_password }}"
+    dest: "./nexus-data/admin.password"
+    mode: '0600'
+
+- name: Copy nginx.conf and docker-compose.yml
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { src: "nginx.conf", dest: "./nginx.conf" }
+    - { src: "docker-compose.yml", dest: "./docker-compose.yml" }
+
+# === 3. Запустить контейнер ВПЕРВЫЕ ===
+- name: Start Nexus and Nginx via docker-compose
+  command: docker compose up -d
+  args:
+    chdir: "{{ playbook_dir }}"
+  register: compose_up
+  changed_when: compose_up.stdout != ""
+
+# === 4. Ждать готовности ===
+- name: Wait for Nexus to respond (200 or 401)
+  uri:
+    url: "{{ nexus_url }}"
+    method: GET
+    validate_certs: no
+    timeout: 10
+  register: nexus_health
+  until:
+    - nexus_health.status is defined
+    - nexus_health.status == 200 or nexus_health.status == 401
+  retries: 120
+  delay: 5
+  ignore_errors: yes
+
+# === 5. Удалить admin.password (безопасность) ===
+- name: Remove admin.password after first start
+  file:
+    path: "./nexus-data/admin.password"
+    state: absent
+
+# === 6. Включить анонимный доступ ===
+- name: Ensure anonymous access is enabled
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/security/anonymous"
+    method: PUT
+    user: admin
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 200,204          # ← поддержка старых и новых версий
+    body_format: json
+    body:
+      enabled: true
+      userId: "anonymous"
+      realmName: "NexusAuthorizingRealm"
+    headers:
+      Content-Type: application/json
+  changed_when: false

@@ -1,0 +1,25 @@
+---
+# Порядок критичен!
+- name: Ensure blob stores exist
+  include_tasks: blobstores.yml
+  tags: [configure, blobstores]
+
+# - name: Configure security realms
+#   include_tasks: realms.yml
+#   tags: [configure, realms]
+
+# - name: Enable anonymous access
+#   include_tasks: anonymous.yml
+#   tags: [configure, anonymous]
+
+# - name: Create standard roles
+#   include_tasks: roles.yml
+#   tags: [configure, roles]
+
+- name: Clean specified repositories
+  include_tasks: clean_repositories.yml
+  tags: [configure, clean]
+
+- name: Create repositories from library
+  include_tasks: repositories.yml
+  tags: [configure, repositories]

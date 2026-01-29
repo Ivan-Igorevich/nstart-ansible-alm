@@ -1,0 +1,17 @@
+# Список имён репозиториев, которые нужно создать/удалить
+nexus_active_repositories:
+  - "npm-proxy"
+  - "npm-hosted"
+  - "npm-group"
+  - "pypi-proxy"
+  - "pypi-hosted"
+  - "pypi-group"
+  - "maven-central"
+  - "maven-releases"
+  - "maven-snapshots"
+  - "maven-public"
+
+nexus_repositories_to_delete:
+  - "nuget.org-proxy"
+  - "nuget-hosted"
+  - "nuget-group"

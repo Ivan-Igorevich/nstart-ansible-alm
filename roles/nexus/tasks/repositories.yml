@@ -1,0 +1,49 @@
+---
+# Получаем текущий список репозиториев (для идемпотентности)
+- name: Get list of existing repositories
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories"
+    method: GET
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    return_content: yes
+  register: existing_repos
+  changed_when: false
+
+# Сортируем репозитории: hosted/proxy перед group
+- name: Prepare repository creation order
+  set_fact:
+    nexus_repos_sorted: >-
+      {{
+        (nexus_active_repositories | map('extract', nexus_repository_library) | list)
+        | selectattr('type', '!=', 'group')
+        | list
+        + 
+        (nexus_active_repositories | map('extract', nexus_repository_library) | list)
+        | selectattr('type', '==', 'group')
+        | list
+      }}
+
+# Создаём репозитории
+- name: Create repository '{{ item.key }}'
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/{{ item.value.format }}/{{ item.value.type }}"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,204,400
+    body_format: json
+    body: "{{ lookup('ansible.builtin.template', 'repo_body_' + item.value.format + '.json.j2') | from_json }}"
+    headers:
+      Content-Type: application/json
+  loop: "{{ nexus_repos_sorted | dict2items }}"
+  vars:
+    repo_name: "{{ item.key }}"
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: repo_name not in existing_names
+  changed_when: false
+  tags: [configure, repositories]
