@@ -16,7 +16,7 @@
 ├── nginx.conf                  # Конфигурация Nginx reverse proxy
 ├── .gitignore
 │
-├── group_vars/nexus_servers/   # Переменные для группы nexus_servers
+├── group_vars/nexus_servers/  # Переменные для группы nexus_servers
 │   ├── connection.yml         # URL, пользователь, SSL
 │   ├── blobstores.yml         # Список blob stores
 │   ├── repo_library.yml       # Полная библиотека репозиториев
@@ -31,7 +31,9 @@
             ├── main.yml
             ├── blobstores.yml
             ├── clean_repositories.yml
-            └── repositories.yml
+            ├── repo_npm.yml
+            ├── repo_pypi.yml
+            └── repo_maven.yml 
 ```
 
 ## Быстрый старт
@@ -50,10 +52,9 @@ ansible-playbook main.yml --tags purge,boot
 ansible-playbook main.yml --tags configure
 ```
 
-
 ## Управление репозиториями
-Библиотека репозиториев
-Файл repo_library.yml содержит полную библиотеку всех возможных репозиториев с их параметрами.
+### Библиотека репозиториев
+Файл `repo_library.yml` содержит полную библиотеку всех возможных репозиториев с их параметрами.
 Пример:
 
 ```yaml
@@ -63,8 +64,8 @@ npm-proxy:
   blob_store: "dev"
   remote_url: "https://registry.npmjs.org/"
 ```
-Активные репозитории
-Файл repo_active.yml определяет, какие репозитории развёртывать:
+### Активные репозитории
+Файл `repo_active.yml` определяет, какие репозитории развёртывать:
 
 ```yaml
 nexus_active_repositories:
@@ -74,6 +75,20 @@ nexus_active_repositories:
 
 nexus_repositories_to_delete:
   - "old-repo"
+```
+### «Форматы — каждый со своим тегом»:
+```yaml
+- name: Configure NPM repositories
+  include_tasks: npm.yml
+  tags: [configure, npm]
+
+- name: Configure PyPI repositories
+  include_tasks: pypi.yml
+  tags: [configure, pypi]
+
+- name: Configure Maven repositories
+  include_tasks: maven.yml
+  tags: [configure, maven]
 ```
 
 ## Безопасность

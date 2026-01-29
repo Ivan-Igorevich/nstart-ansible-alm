@@ -1,0 +1,118 @@
+# roles/nexus/tasks/pypi.yml
+---
+- name: Get existing PyPI repositories
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories"
+    method: GET
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    return_content: yes
+  register: existing_repos
+  changed_when: false
+
+- name: Extract PyPI repositories from library
+  set_fact:
+    pypi_repos: >-
+      {{
+        nexus_active_repositories
+        | map('extract', nexus_repository_library)
+        | selectattr('format', '==', 'pypi')
+        | list
+      }}
+
+# --- Hosted ---
+- name: Create PyPI hosted repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/pypi/hosted"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,204,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+        writePolicy: "ALLOW"
+      cleanup: { policyNames: [] }
+      pypi: {}
+    headers:
+      Content-Type: application/json
+  loop: "{{ pypi_repos | selectattr('type', '==', 'hosted') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  changed_when: false
+  tags: [configure, pypi]
+
+# --- Proxy ---
+- name: Create PyPI proxy repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/pypi/proxy"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,204,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+      cleanup: { policyNames: [] }
+      proxy:
+        remoteUrl: "{{ item.remote_url }}"
+        contentMaxAge: 1440
+        metadataMaxAge: 1440
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        autoBlock: true
+        blocked: false
+      pypi: {}
+    headers:
+      Content-Type: application/json
+  loop: "{{ pypi_repos | selectattr('type', '==', 'proxy') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  changed_when: false
+  tags: [configure, pypi]
+
+# --- Group ---
+- name: Create PyPI group repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/pypi/group"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,204,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+      group:
+        memberNames: "{{ item.member_names }}"
+    headers:
+      Content-Type: application/json
+  loop: "{{ pypi_repos | selectattr('type', '==', 'group') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  changed_when: false
+  tags: [configure, pypi]

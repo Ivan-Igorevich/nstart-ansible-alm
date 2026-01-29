@@ -1,0 +1,121 @@
+# DEBUG: writePolicy added on 2026-01-29
+---
+- name: Get existing NPM repositories
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories"
+    method: GET
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    return_content: yes
+  register: existing_repos
+  changed_when: false
+
+- name: Extract NPM repositories from library
+  set_fact:
+    npm_repos: >-
+      {{
+        nexus_active_repositories
+        | map('extract', nexus_repository_library)
+        | selectattr('format', '==', 'npm')
+        | list
+      }}
+
+# --- Hosted ---
+- name: Create NPM hosted repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/npm/hosted"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,204,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: false
+        writePolicy: "ALLOW"
+      cleanup: { policyNames: [] }
+    headers:
+      Content-Type: application/json
+  loop: "{{ npm_repos | selectattr('type', '==', 'hosted') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  register: npm_hosted_result
+  failed_when:
+    - npm_hosted_result.status == 400
+    - "'already exists' not in (npm_hosted_result.json.errors[0].errorMessage | default(''))"
+  changed_when: npm_hosted_result.status in [201, 204]
+  tags: [configure, npm]
+
+# --- Proxy ---
+- name: Create NPM proxy repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/npm/proxy"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,204,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: false
+      cleanup: { policyNames: [] }
+      proxy:
+        remoteUrl: "{{ item.remote_url }}"
+        contentMaxAge: 1440
+        metadataMaxAge: 1440
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        autoBlock: true
+        blocked: false
+      npm: { removeNonCached: false }
+    headers:
+      Content-Type: application/json
+  loop: "{{ npm_repos | selectattr('type', '==', 'proxy') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  changed_when: false
+  tags: [configure, npm]
+
+# --- Group ---
+- name: Create NPM group repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/npm/group"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,204,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: false
+      group:
+        memberNames: "{{ item.member_names }}"
+    headers:
+      Content-Type: application/json
+  loop: "{{ npm_repos | selectattr('type', '==', 'group') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  changed_when: false
+  tags: [configure, npm]

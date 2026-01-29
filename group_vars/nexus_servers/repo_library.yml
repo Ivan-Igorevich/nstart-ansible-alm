@@ -1,18 +1,21 @@
-# Библиотека всех возможных репозиториев
+---
 nexus_repository_library:
   # --- NPM ---
   npm-proxy:
+    name: "npm-proxy"
     format: "npm"
     type: "proxy"
     blob_store: "dev"
     remote_url: "https://registry.npmjs.org/"
 
   npm-hosted:
+    name: "npm-hosted"
     format: "npm"
     type: "hosted"
     blob_store: "dev"
 
   npm-group:
+    name: "npm-group"
     format: "npm"
     type: "group"
     blob_store: "dev"
@@ -22,17 +25,20 @@ nexus_repository_library:
 
   # --- PyPI ---
   pypi-proxy:
+    name: "pypi-proxy"
     format: "pypi"
     type: "proxy"
     blob_store: "dev"
     remote_url: "https://pypi.org/simple/"
 
   pypi-hosted:
+    name: "pypi-hosted"
     format: "pypi"
     type: "hosted"
     blob_store: "dev"
 
   pypi-group:
+    name: "pypi-group"
     format: "pypi"
     type: "group"
     blob_store: "dev"
@@ -42,89 +48,30 @@ nexus_repository_library:
 
   # --- Maven ---
   maven-central:
+    name: "maven-central"
     format: "maven2"
     type: "proxy"
-    blob_store: "dev"
+    blob_store: "os"
     remote_url: "https://repo1.maven.org/maven2/"
-    auto_block: true
+
+  maven-releases:
+    name: "maven-releases"
+    format: "maven2"
+    type: "hosted"
+    blob_store: "dev"
+
+  maven-snapshots:
+    name: "maven-snapshots"
+    format: "maven2"
+    type: "hosted"
+    blob_store: "dev"
 
   maven-public:
+    name: "maven-public"
     format: "maven2"
     type: "group"
-    blob_store: "dev"
+    blob_store: "os"
     member_names:
       - "maven-central"
       - "maven-releases"
       - "maven-snapshots"
-
-  maven-releases:
-    format: "maven2"
-    type: "hosted"
-    blob_store: "dev"
-    write_policy: "ALLOW"
-
-  maven-snapshots:
-    format: "maven2"
-    type: "hosted"
-    blob_store: "dev"
-    write_policy: "ALLOW_ONCE"
-
-  # --- Docker ---
-  docker-hub-proxy:
-    format: "docker"
-    type: "proxy"
-    blob_store: "docker"
-    remote_url: "https://registry-1.docker.io"
-    docker_index_type: "HUB"
-
-  docker-team1-hosted:
-    format: "docker"
-    type: "hosted"
-    blob_store: "docker"
-    https_port: 5001
-
-  docker-team2-hosted:
-    format: "docker"
-    type: "hosted"
-    blob_store: "docker"
-    https_port: 5002
-
-  docker-public-group:
-    format: "docker"
-    type: "group"
-    blob_store: "docker"
-    member_names:
-      - "docker-hub-proxy"
-      - "docker-team1-hosted"
-
-  # --- NuGet ---
-  nuget.org-proxy:
-    format: "nuget"
-    type: "proxy"
-    blob_store: "dev"
-    remote_url: "https://api.nuget.org/v3/index.json"
-    nuget_version: "V3"
-
-  nuget-hosted:
-    format: "nuget"
-    type: "hosted"
-    blob_store: "dev"
-
-  nuget-group:
-    format: "nuget"
-    type: "group"
-    blob_store: "dev"
-    member_names:
-      - "nuget.org-proxy"
-      - "nuget-hosted"
-
-  # --- Raw (для LLM, бинарников и т.д.) ---
-  llm-models-hosted:
-    format: "raw"
-    type: "hosted"
-    blob_store: "llm"
-
-  llm-datasets-hosted:
-    format: "raw"
-    type: "hosted"
-    blob_store: "llm"
