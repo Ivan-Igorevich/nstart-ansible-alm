@@ -1,0 +1,48 @@
+# group_vars/nexus_servers/roles.yml
+nexus_roles:
+  - name: "pypi-push"
+    description: "Push to PyPI hosted repo"
+    privileges:
+      - "nx-repository-view-pypi-pypi-hosted-read"
+      - "nx-repository-view-pypi-pypi-hosted-edit"
+      - "nx-repository-view-pypi-pypi-hosted-add"
+    inherited_roles:
+      - "nx-anonymous"
+
+  - name: "maven-releases-deploy"
+    description: "Deploy to Maven releases repo"
+    privileges:
+      - "nx-repository-view-maven2-maven-releases-read"
+      - "nx-repository-view-maven2-maven-releases-edit"
+      - "nx-repository-view-maven2-maven-releases-add"
+    inherited_roles:
+      - "nx-anonymous"
+
+  - name: "maven-snapshots-deploy"
+    description: "Deploy to Maven snapshots repo"
+    privileges:
+      - "nx-repository-view-maven2-maven-snapshots-read"
+      - "nx-repository-view-maven2-maven-snapshots-edit"
+      - "nx-repository-view-maven2-maven-snapshots-add"
+      - "nx-repository-view-maven2-maven-snapshots-delete"
+    inherited_roles:
+      - "nx-anonymous"
+
+  - name: "docker-hosted"
+    description: "Push to docker-hosted repo"
+    privileges:
+      - "nx-repository-view-docker-docker-hosted-read"
+      - "nx-repository-view-docker-docker-hosted-edit"
+      - "nx-repository-view-docker-docker-hosted-add"
+    inherited_roles:
+      - "nx-anonymous"
+
+  # Docker hosted test
+  - name: "docker-hosted-test"
+    description: "Push to docker-hosted-test repo"
+    privileges:
+      - "nx-repository-view-docker-docker-hosted-test-read"
+      - "nx-repository-view-docker-docker-hosted-test-edit"
+      - "nx-repository-view-docker-docker-hosted-test-add"
+    inherited_roles:
+      - "nx-anonymous"

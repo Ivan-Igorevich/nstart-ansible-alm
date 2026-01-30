@@ -75,3 +75,54 @@ nexus_repository_library:
       - "maven-central"
       - "maven-releases"
       - "maven-snapshots"
+
+  # --- Docker ---
+  docker-gh-proxy:
+    name: "docker-gh-proxy"
+    format: "docker"
+    type: "proxy"
+    blob_store: "docker"
+    remote_url: "https://ghcr.io"
+    docker_index_type: "REGISTRY"
+  
+  docker-io-proxy:
+    name: "docker-io-proxy"
+    format: "docker"
+    type: "proxy"
+    blob_store: "docker"
+    remote_url: "https://registry-1.docker.io"
+    docker_index_type: "HUB"
+  
+  docker-quay-proxy:
+    name: "docker-quay-proxy"
+    format: "docker"
+    type: "proxy"
+    blob_store: "docker"
+    remote_url: "https://quay.io"
+    docker_index_type: "REGISTRY"
+  
+  docker-hosted:
+    name: "docker-hosted"
+    format: "docker"
+    type: "hosted"
+    blob_store: "docker"
+    write_policy: "ALLOW"
+  
+  docker-hosted-test:
+    name: "docker-hosted-test"
+    format: "docker"
+    type: "hosted"
+    blob_store: "docker"
+    write_policy: "ALLOW"
+  
+  docker-group:
+    name: "docker-group"
+    format: "docker"
+    type: "group"
+    blob_store: "docker"
+    member_names:
+      - "docker-gh-proxy"
+      - "docker-io-proxy"
+      - "docker-quay-proxy"
+      - "docker-hosted"
+      - "docker-hosted-test"

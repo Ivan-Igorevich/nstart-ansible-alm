@@ -10,7 +10,13 @@ nexus_active_repositories:
   - "maven-releases"
   - "maven-snapshots"
   - "maven-public"
-
+  - "docker-gh-proxy"
+  - "docker-io-proxy"
+  - "docker-quay-proxy"
+  - "docker-hosted"
+  - "docker-hosted-test"
+  - "docker-group"
+  
 nexus_repositories_to_delete:
   - "nuget.org-proxy"
   - "nuget-hosted"

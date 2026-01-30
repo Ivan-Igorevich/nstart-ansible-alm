@@ -1,0 +1,36 @@
+---
+- name: Get existing roles
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/security/roles"
+    method: GET
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    return_content: yes
+  register: existing_roles
+  changed_when: false
+
+- name: Create or update role
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/security/roles{% if item.name in existing_role_names %}/{{ item.name }}{% endif %}"
+    method: "{{ 'PUT' if item.name in existing_role_names else 'POST' }}"
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: "{{ 204 if item.name in existing_role_names else 200 }}"
+    body_format: json
+    body:
+      id: "{{ item.name }}"
+      name: "{{ item.name }}"
+      description: "{{ item.description }}"
+      privileges: "{{ item.privileges }}"
+      roles: "{{ item.inherited_roles | default([]) }}"
+    headers:
+      Content-Type: application/json
+  loop: "{{ nexus_roles }}"
+  vars:
+    existing_role_names: "{{ existing_roles.json | map(attribute='name') | list | default([]) }}"
+  changed_when: true
+  tags: [configure, roles]

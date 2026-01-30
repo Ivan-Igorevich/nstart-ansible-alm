@@ -11,11 +11,6 @@
 #   include_tasks: realms.yml
 #   tags: [configure, realms]
 
-# - name: Create standard roles
-#   include_tasks: roles.yml
-#   tags: [configure, roles]
-
-# Форматы — каждый со своим тегом
 - name: Configure NPM repositories
   include_tasks: repo_npm.yml
   tags: [configure, npm]
@@ -27,3 +22,15 @@
 - name: Configure Maven repositories
   include_tasks: repo_maven.yml
   tags: [configure, maven]
+
+- name: Configure Docker repositories
+  include_tasks: repo_docker.yml
+  tags: [configure, docker]
+
+- name: Create standard roles
+  include_tasks: roles_create.yml
+  tags: [configure, roles]
+
+- name: Create users
+  include_tasks: users_create.yml
+  tags: [configure, users]

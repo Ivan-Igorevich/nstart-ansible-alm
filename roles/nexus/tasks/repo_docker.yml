@@ -1,0 +1,159 @@
+---
+- name: Get existing Docker repositories
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories"
+    method: GET
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    return_content: yes
+  register: existing_repos
+  changed_when: false
+
+- name: Extract Docker repositories from library
+  set_fact:
+    docker_repos: >-
+      {{
+        nexus_active_repositories
+        | map('extract', nexus_repository_library)
+        | selectattr('format', '==', 'docker')
+        | list
+      }}
+
+# Hosted
+- name: Create Docker hosted repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/docker/hosted"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+        writePolicy: "ALLOW"
+      cleanup:
+        policyNames: []
+      docker:
+        v1Enabled: true
+        forceBasicAuth: false
+        dockerApiVersion: "V2"
+        pathEnabled: true
+    headers:
+      Content-Type: application/json
+  loop: "{{ docker_repos | selectattr('type', '==', 'hosted') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  register: hosted_result
+  failed_when:
+    - hosted_result.status == 400
+    - "'already exists' not in (hosted_result.json.errors[0].errorMessage | default(''))"
+  changed_when: hosted_result.status == 201
+  tags: [configure, docker]
+
+# Proxy
+- name: Create Docker proxy repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/docker/proxy"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+      cleanup:
+        { policyNames: [] }
+      proxy:
+        remoteUrl: "{{ item.remote_url }}"
+        contentMaxAge: 1440
+        metadataMaxAge: 1440
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: true
+        connection:
+          retries: 0
+          timeout: 60
+          enableCircularRedirects: false
+          enableCookies: false
+          useTrustStore: false
+      docker:
+        v1Enabled: true
+        forceBasicAuth: false
+        dockerApiVersion: "V2"
+        pathEnabled: true
+      dockerProxy:
+        indexType: "{{ item.docker_index_type }}"
+        repositoryPolicy: "ALLOW"
+        useTrustStoreForSsl: false
+        anonymousAccess: true
+    headers:
+      Content-Type: application/json
+  loop: "{{ docker_repos | selectattr('type', '==', 'proxy') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  register: proxy_result
+  failed_when:
+    - proxy_result.status != 201
+    - proxy_result.status == 400
+    - "'already exists' not in (proxy_result.json.errors[0].errorMessage | default(''))"
+  changed_when: proxy_result.status == 201
+  tags: [configure, docker]
+
+# Group
+- name: Create Docker group repository
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/repositories/docker/group"
+    method: POST
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: 201,400
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+      cleanup:
+        policyNames: []
+      group:
+        memberNames: "{{ item.member_names }}"
+      docker:
+        v1Enabled: true
+        forceBasicAuth: false
+        dockerApiVersion: "V2"
+        pathEnabled: true
+    headers:
+      Content-Type: application/json
+  loop: "{{ docker_repos | selectattr('type', '==', 'group') | list }}"
+  vars:
+    existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
+  when: item.name not in existing_names
+  register: group_result
+  failed_when:
+    - group_result.status != 201
+    - group_result.status == 400
+    - "'already exists' not in (group_result.json.errors[0].errorMessage | default(''))"
+  changed_when: group_result.status == 201
+  tags: [configure, docker]

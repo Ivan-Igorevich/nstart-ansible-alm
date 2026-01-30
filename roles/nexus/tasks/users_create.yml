@@ -1,0 +1,44 @@
+---
+- name: Get existing users
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/security/users"
+    method: GET
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    return_content: yes
+  register: existing_users
+  changed_when: false
+
+- name: Create or update Nexus users
+  uri:
+    url: "{{ nexus_url }}/service/rest/v1/security/users{% if item.username in existing_user_ids %}/{{ item.username }}{% endif %}"
+    method: "{{ 'PUT' if item.username in existing_user_ids else 'POST' }}"
+    user: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+    force_basic_auth: yes
+    validate_certs: "{{ ssl_validate }}"
+    status_code: "{{ 204 if item.username in existing_user_ids else 200 }}"
+    body_format: json
+    body: |
+      {
+        "userId": "{{ item.username }}",
+        "firstName": "{{ item.firstname | default(item.username) }}",
+        "lastName": "{{ item.lastname | default('User') }}",
+        "emailAddress": "{{ item.email }}",
+        "status": "{{ item.status | default('active') }}",
+        "roles": {{ item.roles | default([]) | to_json }}
+        {% if item.username not in existing_user_ids %}
+        ,"password": "{{ nexus_secrets[item.username] }}"
+        {% endif %}
+      }
+    headers:
+      Content-Type: application/json
+  loop: "{{ nexus_users }}"
+  vars:
+    existing_user_ids: "{{ existing_users.json | map(attribute='userId') | list | default([]) }}"
+  when: item.username in nexus_secrets
+  changed_when: true
+#  no_log: true
+  tags: [configure, users]

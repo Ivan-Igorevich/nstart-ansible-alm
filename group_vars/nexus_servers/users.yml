@@ -1,0 +1,16 @@
+nexus_users:
+  - username: "docker-pusher"
+    email: "docker@pusher.nstart"
+    roles:
+      - "docker-hosted"
+
+  - username: "developer-262"
+    email: "dev-262@nstart.space"
+    roles:
+      - "docker-hosted"
+      - "pypi-hosted"
+
+  - username: "docker-tester"
+    email: "docker@tester.nstart"
+    roles:
+      - "docker-hosted-test"
