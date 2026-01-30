@@ -28,6 +28,7 @@
         "lastName": "{{ item.lastname | default('User') }}",
         "emailAddress": "{{ item.email }}",
         "status": "{{ item.status | default('active') }}",
+        "source": "default",
         "roles": {{ item.roles | default([]) | to_json }}
         {% if item.username not in existing_user_ids %}
         ,"password": "{{ nexus_secrets[item.username] }}"

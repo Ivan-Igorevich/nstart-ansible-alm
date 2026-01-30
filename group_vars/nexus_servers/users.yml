@@ -8,7 +8,7 @@ nexus_users:
     email: "dev-262@nstart.space"
     roles:
       - "docker-hosted"
-      - "pypi-hosted"
+      - "pypi-push"
 
   - username: "docker-tester"
     email: "docker@tester.nstart"
