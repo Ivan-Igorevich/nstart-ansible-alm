@@ -51,7 +51,7 @@ nexus_repository_library:
     name: "maven-central"
     format: "maven2"
     type: "proxy"
-    blob_store: "os"
+    blob_store: "dev"
     remote_url: "https://repo1.maven.org/maven2/"
 
   maven-releases:
@@ -70,7 +70,7 @@ nexus_repository_library:
     name: "maven-public"
     format: "maven2"
     type: "group"
-    blob_store: "os"
+    blob_store: "dev"
     member_names:
       - "maven-central"
       - "maven-releases"
@@ -126,3 +126,37 @@ nexus_repository_library:
       - "docker-quay-proxy"
       - "docker-hosted"
       - "docker-hosted-test"
+
+  # --- YUM ---
+  yum-proxy:
+    name: "yum-proxy"
+    format: "yum"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://mirror.yandex.ru/"
+    yum_repodata_depth: 1
+  
+  ubi-redhat:
+    name: "ubi-redhat"
+    format: "yum"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://cdn-ubi.redhat.com/"
+    yum_repodata_depth: 1
+  
+  yum-hosted:
+    name: "yum-hosted"
+    format: "yum"
+    type: "hosted"
+    blob_store: "os"
+    write_policy: "ALLOW"
+  
+  yum-group:
+    name: "yum-group"
+    format: "yum"
+    type: "group"
+    blob_store: "os"
+    member_names:
+      - "yum-proxy"
+      - "ubi-redhat"
+      - "yum-hosted"

@@ -16,7 +16,11 @@ nexus_active_repositories:
   - "docker-hosted"
   - "docker-hosted-test"
   - "docker-group"
-  
+  - "yum-proxy"
+  - "ubi-redhat"
+  - "yum-hosted"
+  - "yum-group"
+
 nexus_repositories_to_delete:
   - "nuget.org-proxy"
   - "nuget-hosted"

@@ -27,6 +27,10 @@
   include_tasks: repo_docker.yml
   tags: [configure, docker]
 
+- name: Configure YUM repositories
+  include_tasks: repo_yum.yml
+  tags: [configure, yum]
+  
 - name: Create standard roles
   include_tasks: roles_create.yml
   tags: [configure, roles]
