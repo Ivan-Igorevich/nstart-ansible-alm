@@ -10,6 +10,8 @@ nexus_active_repositories:
   - "maven-releases"
   - "maven-snapshots"
   - "maven-public"
+  - "xwiki-public"
+  - "xwiki-maven"
   - "docker-gh-proxy"
   - "docker-io-proxy"
   - "docker-quay-proxy"
@@ -20,6 +22,8 @@ nexus_active_repositories:
   - "ubi-redhat"
   - "yum-hosted"
   - "yum-group"
+  - "alpine"
+  - "file-share"
 
 nexus_repositories_to_delete:
   - "nuget.org-proxy"

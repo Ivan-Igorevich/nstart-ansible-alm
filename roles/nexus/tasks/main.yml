@@ -30,6 +30,10 @@
 - name: Configure YUM repositories
   include_tasks: repo_yum.yml
   tags: [configure, yum]
+
+- name: Configure raw repositories
+  include_tasks: repo_raw.yml
+  tags: [configure, raw]
   
 - name: Create standard roles
   include_tasks: roles_create.yml

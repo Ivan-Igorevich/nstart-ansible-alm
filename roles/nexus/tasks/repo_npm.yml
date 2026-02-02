@@ -1,4 +1,3 @@
-# DEBUG: writePolicy added on 2026-01-29
 ---
 - name: Get existing NPM repositories
   uri:

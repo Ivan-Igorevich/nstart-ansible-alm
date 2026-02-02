@@ -49,32 +49,49 @@ nexus_repository_library:
   # --- Maven ---
   maven-central:
     name: "maven-central"
-    format: "maven2"
+    format: "maven"
     type: "proxy"
     blob_store: "dev"
     remote_url: "https://repo1.maven.org/maven2/"
 
   maven-releases:
     name: "maven-releases"
-    format: "maven2"
+    format: "maven"
     type: "hosted"
     blob_store: "dev"
 
   maven-snapshots:
     name: "maven-snapshots"
-    format: "maven2"
+    format: "maven"
     type: "hosted"
     blob_store: "dev"
 
   maven-public:
     name: "maven-public"
-    format: "maven2"
+    format: "maven"
     type: "group"
     blob_store: "dev"
     member_names:
       - "maven-central"
       - "maven-releases"
       - "maven-snapshots"
+
+  # --- XWiki Maven ---
+  xwiki-public:
+    name: "xwiki-public"
+    format: "maven"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://nexus.xwiki.org/nexus/content/groups/public/"
+    maven_layout_policy: "PERMISSIVE"
+
+  xwiki-maven:
+    name: "xwiki-maven"
+    format: "maven"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://maven.xwiki.org/releases/"
+    maven_layout_policy: "STRICT"
 
   # --- Docker ---
   docker-gh-proxy:
@@ -160,3 +177,108 @@ nexus_repository_library:
       - "yum-proxy"
       - "ubi-redhat"
       - "yum-hosted"
+
+  # --- RAW ---
+  alpine:
+    name: "alpine"
+    format: "raw"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://mirror.yandex.ru/mirrors/alpine/"
+
+  file-share:
+    name: "file-share"
+    format: "raw"
+    type: "hosted"
+    blob_store: "os"
+    write_policy: "ALLOW"
+
+# --- APT ---
+apt-hosted:
+  name: "apt-hosted"
+  format: "apt"
+  type: "hosted"
+  blob_store: "dev"
+  write_policy: "ALLOW"
+  apt_distribution: "jammy"
+
+# Proxy
+apt-yandex:
+  name: "apt-yandex"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://mirror.yandex.ru/"
+  apt_distribution: "jammy"
+
+apt-clickhouse:
+  name: "apt-clickhouse"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://packages.clickhouse.com/deb/"
+  apt_distribution: "jammy"
+
+apt-confluent:
+  name: "apt-confluent"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://packages.confluent.io/clients/deb/"
+  apt_distribution: "jammy"
+
+apt-kitware:
+  name: "apt-kitware"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://apt.kitware.com/ubuntu/"
+  apt_distribution: "jammy"
+
+apt-llvm:
+  name: "apt-llvm"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "http://apt.llvm.org/jammy/"
+  apt_distribution: "jammy"
+
+apt-mariadb:
+  name: "apt-mariadb"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://mirror.kumi.systems/mariadb/repo/10.11/ubuntu/"
+  apt_distribution: "jammy"
+
+apt-mongodb:
+  name: "apt-mongodb"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://repo.mongodb.org/apt/ubuntu/"
+  apt_distribution: "jammy"
+
+apt-rabbitmq-server:
+  name: "apt-rabbitmq-server"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://ppa.launchpadcontent.net/rabbitmq/rabbitmq-server/ubuntu/"
+  apt_distribution: "jammy"
+
+apt-rabbitmq-erlang:
+  name: "apt-rabbitmq-erlang"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://ppa.launchpadcontent.net/rabbitmq/rabbitmq-erlang/ubuntu/"
+  apt_distribution: "jammy"
+
+apt-toolchain-r:
+  name: "apt-toolchain-r"
+  format: "apt"
+  type: "proxy"
+  blob_store: "os"
+  remote_url: "https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/"
+  apt_distribution: "jammy"

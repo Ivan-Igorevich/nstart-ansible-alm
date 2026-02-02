@@ -18,14 +18,14 @@
       {{
         nexus_active_repositories
         | map('extract', nexus_repository_library)
-        | selectattr('format', '==', 'maven2')
+        | selectattr('format', '==', 'maven')
         | list
       }}
 
 # --- Hosted ---
 - name: Create Maven hosted repository
   uri:
-    url: "{{ nexus_url }}/service/rest/v1/repositories/maven2/hosted"
+    url: "{{ nexus_url }}/service/rest/v1/repositories/maven/hosted"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
@@ -57,7 +57,7 @@
 # --- Proxy ---
 - name: Create Maven proxy repository
   uri:
-    url: "{{ nexus_url }}/service/rest/v1/repositories/maven2/proxy"
+    url: "{{ nexus_url }}/service/rest/v1/repositories/maven/proxy"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
@@ -84,7 +84,7 @@
         blocked: false
       maven:
         versionPolicy: "MIXED"
-        layoutPolicy: "STRICT"
+        layoutPolicy: "{{ item.maven_layout_policy | default('STRICT') }}"
     headers:
       Content-Type: application/json
   loop: "{{ maven_repos | selectattr('type', '==', 'proxy') | list }}"
@@ -97,7 +97,7 @@
 # --- Group ---
 - name: Create Maven group repository
   uri:
-    url: "{{ nexus_url }}/service/rest/v1/repositories/maven2/group"
+    url: "{{ nexus_url }}/service/rest/v1/repositories/maven/group"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
