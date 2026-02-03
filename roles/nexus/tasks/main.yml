@@ -34,7 +34,11 @@
 - name: Configure raw repositories
   include_tasks: repo_raw.yml
   tags: [configure, raw]
-  
+
+- name: Configure APT repositories
+  include_tasks: repo_apt.yml
+  tags: [configure, apt]
+
 - name: Create standard roles
   include_tasks: roles_create.yml
   tags: [configure, roles]

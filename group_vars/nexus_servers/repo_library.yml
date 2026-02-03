@@ -193,92 +193,92 @@ nexus_repository_library:
     blob_store: "os"
     write_policy: "ALLOW"
 
-# --- APT ---
-apt-hosted:
-  name: "apt-hosted"
-  format: "apt"
-  type: "hosted"
-  blob_store: "dev"
-  write_policy: "ALLOW"
-  apt_distribution: "jammy"
+  # --- APT ---
+  apt-hosted:
+    name: "apt-hosted"
+    format: "apt"
+    type: "hosted"
+    blob_store: "dev"
+    write_policy: "ALLOW"
+    apt_distribution: "jammy"
 
-# Proxy
-apt-yandex:
-  name: "apt-yandex"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://mirror.yandex.ru/"
-  apt_distribution: "jammy"
+  # Proxy
+  apt-yandex:
+    name: "apt-yandex"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://mirror.yandex.ru/"
+    apt_distribution: "jammy"
 
-apt-clickhouse:
-  name: "apt-clickhouse"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://packages.clickhouse.com/deb/"
-  apt_distribution: "jammy"
+  apt-clickhouse:
+    name: "apt-clickhouse"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://packages.clickhouse.com/deb/"
+    apt_distribution: "jammy"
 
-apt-confluent:
-  name: "apt-confluent"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://packages.confluent.io/clients/deb/"
-  apt_distribution: "jammy"
+  apt-confluent:
+    name: "apt-confluent"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://packages.confluent.io/clients/deb/"
+    apt_distribution: "jammy"
 
-apt-kitware:
-  name: "apt-kitware"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://apt.kitware.com/ubuntu/"
-  apt_distribution: "jammy"
+  apt-kitware:
+    name: "apt-kitware"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://apt.kitware.com/ubuntu/"
+    apt_distribution: "jammy"
 
-apt-llvm:
-  name: "apt-llvm"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "http://apt.llvm.org/jammy/"
-  apt_distribution: "jammy"
+  apt-llvm:
+    name: "apt-llvm"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "http://apt.llvm.org/jammy/"
+    apt_distribution: "jammy"
 
-apt-mariadb:
-  name: "apt-mariadb"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://mirror.kumi.systems/mariadb/repo/10.11/ubuntu/"
-  apt_distribution: "jammy"
+  apt-mariadb:
+    name: "apt-mariadb"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://mirror.kumi.systems/mariadb/repo/10.11/ubuntu/"
+    apt_distribution: "jammy"
 
-apt-mongodb:
-  name: "apt-mongodb"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://repo.mongodb.org/apt/ubuntu/"
-  apt_distribution: "jammy"
+  apt-mongodb:
+    name: "apt-mongodb"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://repo.mongodb.org/apt/ubuntu/"
+    apt_distribution: "jammy"
 
-apt-rabbitmq-server:
-  name: "apt-rabbitmq-server"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://ppa.launchpadcontent.net/rabbitmq/rabbitmq-server/ubuntu/"
-  apt_distribution: "jammy"
+  apt-rabbitmq-server:
+    name: "apt-rabbitmq-server"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://deb1.rabbitmq.com/rabbitmq-server/ubuntu/jammy/"
+    apt_distribution: "jammy"
 
-apt-rabbitmq-erlang:
-  name: "apt-rabbitmq-erlang"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://ppa.launchpadcontent.net/rabbitmq/rabbitmq-erlang/ubuntu/"
-  apt_distribution: "jammy"
+  apt-rabbitmq-erlang:
+    name: "apt-rabbitmq-erlang"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://deb1.rabbitmq.com/rabbitmq-erlang/ubuntu/jammy/"
+    apt_distribution: "jammy"
 
-apt-toolchain-r:
-  name: "apt-toolchain-r"
-  format: "apt"
-  type: "proxy"
-  blob_store: "os"
-  remote_url: "https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/"
-  apt_distribution: "jammy"
+  apt-toolchain-r:
+    name: "apt-toolchain-r"
+    format: "apt"
+    type: "proxy"
+    blob_store: "os"
+    remote_url: "https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/"
+    apt_distribution: "jammy"

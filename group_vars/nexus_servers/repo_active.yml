@@ -24,6 +24,17 @@ nexus_active_repositories:
   - "yum-group"
   - "alpine"
   - "file-share"
+  - "apt-hosted"
+  - "apt-yandex"
+  - "apt-clickhouse"
+  - "apt-confluent"
+  - "apt-kitware"
+  - "apt-llvm"
+  - "apt-mariadb"
+  - "apt-mongodb"
+  - "apt-rabbitmq-server"
+  - "apt-rabbitmq-erlang"
+  - "apt-toolchain-r"
 
 nexus_repositories_to_delete:
   - "nuget.org-proxy"
