@@ -39,6 +39,10 @@
   include_tasks: repo_apt.yml
   tags: [configure, apt]
 
+- name: Configure Hugging Face repositories
+  include_tasks: repo_huggingface.yml
+  tags: [configure, huggingface]
+
 - name: Create standard roles
   include_tasks: roles_create.yml
   tags: [configure, roles]

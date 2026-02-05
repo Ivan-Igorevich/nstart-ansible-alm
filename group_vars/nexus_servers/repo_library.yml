@@ -282,3 +282,11 @@ nexus_repository_library:
     blob_store: "os"
     remote_url: "https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/"
     apt_distribution: "jammy"
+
+  # --- Hugging Face ---
+  huggingface-proxy:
+    name: "huggingface-proxy"
+    format: "huggingface"
+    type: "proxy"
+    blob_store: "llm"
+    remote_url: "https://huggingface.co/"
