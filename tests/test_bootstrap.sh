@@ -14,6 +14,7 @@ set -euo pipefail
 NEXUS_URL="${NEXUS_URL:-http://nginx:80}"
 ADMIN_USER="${NEXUS_ADMIN_USER:-admin}"
 ADMIN_PASSWORD="${NEXUS_ADMIN_PASSWORD:-admin123}"
+NEXUS_DATA="${NEXUS_DATA_DIR:-/nexus-data}"
 
 PASSED=0
 FAILED=0
@@ -46,18 +47,6 @@ assert_eq() {
   fi
 }
 
-assert_contains() {
-  local test_name="$1" expected="$2" actual="$3"
-  TOTAL=$((TOTAL + 1))
-  if echo "$actual" | grep -q "$expected"; then
-    PASSED=$((PASSED + 1))
-    log_pass "$test_name (contains '$expected')"
-  else
-    FAILED=$((FAILED + 1))
-    log_fail "$test_name (expected to contain '$expected', got: $actual)"
-  fi
-}
-
 assert_not_empty() {
   local test_name="$1" value="$2"
   TOTAL=$((TOTAL + 1))
@@ -70,66 +59,103 @@ assert_not_empty() {
   fi
 }
 
-wait_for_nexus() {
-  local max_attempts=60
-  local attempt=0
-  log_info "Waiting for Nexus at $NEXUS_URL ..."
-  while [ $attempt -lt $max_attempts ]; do
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" "$NEXUS_URL/" 2>/dev/null || echo "000")
-    if [ "$http_code" = "200" ] || [ "$http_code" = "401" ]; then
-      log_info "Nexus is responding (HTTP $http_code) after $((attempt * 5))s"
-      return 0
-    fi
-    attempt=$((attempt + 1))
-    sleep 5
-  done
-  log_fail "Nexus did not become ready after $((max_attempts * 5))s"
-  return 1
-}
+# ---------------------------------------------------------------------------
+# Phase 0: Wait for Nexus to be fully ready
+# ---------------------------------------------------------------------------
+log_section "Phase 0: Waiting for Nexus to be fully ready"
+
+# Шаг 1: Ждём ответа от REST API через nginx
+log_info "Step 1: Waiting for Nexus REST API at $NEXUS_URL ..."
+attempt=0
+max_attempts=90
+while [ $attempt -lt $max_attempts ]; do
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "$NEXUS_URL/service/rest/v1/status" 2>/dev/null || echo "000")
+  if [ "$http_code" = "200" ]; then
+    log_info "Nexus REST API is responding (HTTP $http_code) after $((attempt * 5))s"
+    break
+  fi
+  if [ $((attempt % 6)) -eq 0 ]; then
+    log_info "Still waiting... (attempt $attempt/$max_attempts, last HTTP=$http_code)"
+  fi
+  attempt=$((attempt + 1))
+  sleep 5
+done
+if [ $attempt -ge $max_attempts ]; then
+  log_fail "Nexus REST API did not become ready after $((max_attempts * 5))s"
+  exit 1
+fi
+
+# Шаг 2: Ждём появления файла admin.password (Nexus генерирует при первом старте)
+log_info "Step 2: Waiting for admin.password file at $NEXUS_DATA/admin.password ..."
+attempt=0
+max_attempts=60
+while [ $attempt -lt $max_attempts ]; do
+  if [ -f "$NEXUS_DATA/admin.password" ]; then
+    log_info "admin.password file found after $((attempt * 2))s"
+    break
+  fi
+  attempt=$((attempt + 1))
+  sleep 2
+done
+if [ $attempt -ge $max_attempts ]; then
+  log_fail "admin.password file did not appear after $((max_attempts * 2))s"
+  exit 1
+fi
+
+# Шаг 3: Дополнительная пауза — Nexus может ещё инициализировать внутренние сервисы
+log_info "Step 3: Extra wait for Nexus internal services..."
+sleep 5
+
+# Шаг 4: Ждём что API аутентификации работает (с начальным паролем)
+INITIAL_PASSWORD=$(cat "$NEXUS_DATA/admin.password")
+log_info "Initial admin password read from file (length=${#INITIAL_PASSWORD})"
+
+attempt=0
+max_attempts=30
+while [ $attempt -lt $max_attempts ]; do
+  init_auth_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    -u "${ADMIN_USER}:${INITIAL_PASSWORD}" \
+    "$NEXUS_URL/service/rest/v1/status/check" 2>/dev/null || echo "000")
+  if [ "$init_auth_code" = "200" ]; then
+    log_info "Initial password authentication works (HTTP $init_auth_code) after $((attempt * 3))s"
+    break
+  fi
+  attempt=$((attempt + 1))
+  sleep 3
+done
+if [ $attempt -ge $max_attempts ]; then
+  log_fail "Cannot authenticate with initial password after $((max_attempts * 3))s (last HTTP=$init_auth_code)"
+  exit 1
+fi
+
+log_info "Nexus is fully ready!"
 
 # ---------------------------------------------------------------------------
-# Phase 0: Wait for Nexus
-# ---------------------------------------------------------------------------
-log_section "Phase 0: Waiting for Nexus to be ready"
-wait_for_nexus
-
-# ---------------------------------------------------------------------------
-# Phase 1: Bootstrap — set admin password via admin.password file
+# Phase 1: Bootstrap — change admin password
 # ---------------------------------------------------------------------------
 log_section "Phase 1: Bootstrap — admin password setup"
 
-# Проверяем, есть ли admin.password (значит Nexus ещё не настроен)
-INITIAL_PASSWORD=""
-if [ -f /nexus-data/admin.password ]; then
-  INITIAL_PASSWORD=$(cat /nexus-data/admin.password)
-  log_info "Found admin.password file, initial password present"
-else
-  log_info "No admin.password file — Nexus may already be configured"
-fi
+log_info "Changing admin password from initial to target..."
+change_code=$(curl -s -o /dev/null -w "%{http_code}" \
+  -u "${ADMIN_USER}:${INITIAL_PASSWORD}" \
+  -X PUT \
+  -H "Content-Type: text/plain" \
+  -d "${ADMIN_PASSWORD}" \
+  "$NEXUS_URL/service/rest/v1/security/users/admin/change-password" 2>/dev/null || echo "000")
+assert_eq "Change admin password" "204" "$change_code"
 
-# Пытаемся авторизоваться с целевым паролем (уже настроен?)
-admin_auth_code=$(curl -s -o /dev/null -w "%{http_code}" \
+# Проверяем, что новый пароль работает
+verify_code=$(curl -s -o /dev/null -w "%{http_code}" \
   -u "${ADMIN_USER}:${ADMIN_PASSWORD}" \
   "$NEXUS_URL/service/rest/v1/status/check" 2>/dev/null || echo "000")
+assert_eq "New admin password works" "200" "$verify_code"
 
-if [ "$admin_auth_code" = "200" ]; then
-  log_info "Admin already configured with target password"
-elif [ -n "$INITIAL_PASSWORD" ]; then
-  # Нужно сменить пароль через Nexus API
-  log_info "Changing admin password from initial to target..."
-  change_code=$(curl -s -o /dev/null -w "%{http_code}" \
-    -u "${ADMIN_USER}:${INITIAL_PASSWORD}" \
-    -X PUT \
-    -H "Content-Type: text/plain" \
-    -d "${ADMIN_PASSWORD}" \
-    "$NEXUS_URL/service/rest/v1/security/users/admin/change-password" 2>/dev/null || echo "000")
-  assert_eq "Change admin password" "204" "$change_code"
-  log_info "Password changed successfully"
-else
-  log_fail "Cannot authenticate and no admin.password file found"
-  FAILED=$((FAILED + 1))
-  TOTAL=$((TOTAL + 1))
-fi
+# Проверяем, что старый пароль больше не работает
+old_pw_code=$(curl -s -o /dev/null -w "%{http_code}" \
+  -u "${ADMIN_USER}:${INITIAL_PASSWORD}" \
+  "$NEXUS_URL/service/rest/v1/status/check" 2>/dev/null || echo "000")
+assert_eq "Old initial password rejected" "401" "$old_pw_code"
 
 # ---------------------------------------------------------------------------
 # Phase 2: Enable anonymous access
