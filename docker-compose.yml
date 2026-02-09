@@ -2,12 +2,13 @@ services:
   nexus:
     container_name: nexus
     user: root
-    image: sonatype/nexus3:latest
+    image: sonatype/nexus3:3.83.0
+    restart: always
     volumes:
       - ./nexus-data:/nexus-data
   nginx:
     container_name: nginx-server
-    image: nginx
+    image: nginx:1.27-alpine
     restart: always
     ports:
       - 8085:80

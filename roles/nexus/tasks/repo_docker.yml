@@ -1,18 +1,19 @@
 ---
 - name: Get existing Docker repositories
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories"
     method: GET
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    return_content: yes
+    return_content: true
   register: existing_repos
+  no_log: true
   changed_when: false
 
 - name: Extract Docker repositories from library
-  set_fact:
+  ansible.builtin.set_fact:
     docker_repos: >-
       {{
         nexus_active_repositories
@@ -23,14 +24,14 @@
 
 # Hosted
 - name: Create Docker hosted repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/docker/hosted"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,400
+    status_code: [201, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -53,6 +54,7 @@
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
   register: hosted_result
+  no_log: true
   failed_when:
     - hosted_result.status == 400
     - "'already exists' not in (hosted_result.json.errors[0].errorMessage | default(''))"
@@ -61,14 +63,14 @@
 
 # Proxy
 - name: Create Docker proxy repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/docker/proxy"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,400
+    status_code: [201, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -77,7 +79,7 @@
         blobStoreName: "{{ item.blob_store }}"
         strictContentTypeValidation: true
       cleanup:
-        { policyNames: [] }
+        policyNames: []
       proxy:
         remoteUrl: "{{ item.remote_url }}"
         contentMaxAge: 1440
@@ -111,8 +113,8 @@
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
   register: proxy_result
+  no_log: true
   failed_when:
-    - proxy_result.status != 201
     - proxy_result.status == 400
     - "'already exists' not in (proxy_result.json.errors[0].errorMessage | default(''))"
   changed_when: proxy_result.status == 201
@@ -120,14 +122,14 @@
 
 # Group
 - name: Create Docker group repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/docker/group"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,400
+    status_code: [201, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -151,8 +153,8 @@
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
   register: group_result
+  no_log: true
   failed_when:
-    - group_result.status != 201
     - group_result.status == 400
     - "'already exists' not in (group_result.json.errors[0].errorMessage | default(''))"
   changed_when: group_result.status == 201

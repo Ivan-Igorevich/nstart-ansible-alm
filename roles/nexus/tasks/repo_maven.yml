@@ -1,19 +1,19 @@
-# roles/nexus/tasks/maven.yml
 ---
 - name: Get existing Maven repositories
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories"
     method: GET
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    return_content: yes
+    return_content: true
   register: existing_repos
+  no_log: true
   changed_when: false
 
 - name: Extract Maven repositories from library
-  set_fact:
+  ansible.builtin.set_fact:
     maven_repos: >-
       {{
         nexus_active_repositories
@@ -24,14 +24,14 @@
 
 # --- Hosted ---
 - name: Create Maven hosted repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/maven/hosted"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,204,400
+    status_code: [201, 204, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -51,19 +51,24 @@
   vars:
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
-  changed_when: false
+  register: maven_hosted_result
+  no_log: true
+  failed_when:
+    - maven_hosted_result.status == 400
+    - "'already exists' not in (maven_hosted_result.json.errors[0].errorMessage | default(''))"
+  changed_when: maven_hosted_result.status in [201, 204]
   tags: [configure, maven]
 
 # --- Proxy ---
 - name: Create Maven proxy repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/maven/proxy"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,204,400
+    status_code: [201, 204, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -91,19 +96,24 @@
   vars:
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
-  changed_when: false
+  register: maven_proxy_result
+  no_log: true
+  failed_when:
+    - maven_proxy_result.status == 400
+    - "'already exists' not in (maven_proxy_result.json.errors[0].errorMessage | default(''))"
+  changed_when: maven_proxy_result.status in [201, 204]
   tags: [configure, maven]
 
 # --- Group ---
 - name: Create Maven group repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/maven/group"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,204,400
+    status_code: [201, 204, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -119,5 +129,10 @@
   vars:
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
-  changed_when: false
+  register: maven_group_result
+  no_log: true
+  failed_when:
+    - maven_group_result.status == 400
+    - "'already exists' not in (maven_group_result.json.errors[0].errorMessage | default(''))"
+  changed_when: maven_group_result.status in [201, 204]
   tags: [configure, maven]

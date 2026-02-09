@@ -283,6 +283,14 @@ nexus_repository_library:
     remote_url: "https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/"
     apt_distribution: "jammy"
 
+  # --- Ansible Galaxy (raw proxy) ---
+  ansible-galaxy:
+    name: "ansible-galaxy"
+    format: "raw"
+    type: "proxy"
+    blob_store: "dev"
+    remote_url: "https://galaxy.ansible.com/"
+
   # --- Hugging Face ---
   huggingface-proxy:
     name: "huggingface-proxy"

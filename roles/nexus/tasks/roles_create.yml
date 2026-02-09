@@ -1,25 +1,26 @@
 ---
 - name: Get existing roles
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/security/roles"
     method: GET
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    return_content: yes
+    return_content: true
   register: existing_roles
+  no_log: true
   changed_when: false
 
 - name: Create or update role
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/security/roles{% if item.name in existing_role_names %}/{{ item.name }}{% endif %}"
     method: "{{ 'PUT' if item.name in existing_role_names else 'POST' }}"
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: "{{ 204 if item.name in existing_role_names else 200 }}"
+    status_code: [200, 204]
     body_format: json
     body:
       id: "{{ item.name }}"
@@ -32,5 +33,6 @@
   loop: "{{ nexus_roles }}"
   vars:
     existing_role_names: "{{ existing_roles.json | map(attribute='name') | list | default([]) }}"
+  no_log: true
   changed_when: true
   tags: [configure, roles]

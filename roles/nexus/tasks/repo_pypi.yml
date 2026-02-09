@@ -1,19 +1,19 @@
-# roles/nexus/tasks/pypi.yml
 ---
 - name: Get existing PyPI repositories
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories"
     method: GET
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    return_content: yes
+    return_content: true
   register: existing_repos
+  no_log: true
   changed_when: false
 
 - name: Extract PyPI repositories from library
-  set_fact:
+  ansible.builtin.set_fact:
     pypi_repos: >-
       {{
         nexus_active_repositories
@@ -24,14 +24,14 @@
 
 # --- Hosted ---
 - name: Create PyPI hosted repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/pypi/hosted"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,204,400
+    status_code: [201, 204, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -48,19 +48,24 @@
   vars:
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
-  changed_when: false
+  register: pypi_hosted_result
+  no_log: true
+  failed_when:
+    - pypi_hosted_result.status == 400
+    - "'already exists' not in (pypi_hosted_result.json.errors[0].errorMessage | default(''))"
+  changed_when: pypi_hosted_result.status in [201, 204]
   tags: [configure, pypi]
 
 # --- Proxy ---
 - name: Create PyPI proxy repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/pypi/proxy"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,204,400
+    status_code: [201, 204, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -86,19 +91,24 @@
   vars:
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
-  changed_when: false
+  register: pypi_proxy_result
+  no_log: true
+  failed_when:
+    - pypi_proxy_result.status == 400
+    - "'already exists' not in (pypi_proxy_result.json.errors[0].errorMessage | default(''))"
+  changed_when: pypi_proxy_result.status in [201, 204]
   tags: [configure, pypi]
 
 # --- Group ---
 - name: Create PyPI group repository
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/pypi/group"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 201,204,400
+    status_code: [201, 204, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -114,5 +124,10 @@
   vars:
     existing_names: "{{ existing_repos.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
-  changed_when: false
+  register: pypi_group_result
+  no_log: true
+  failed_when:
+    - pypi_group_result.status == 400
+    - "'already exists' not in (pypi_group_result.json.errors[0].errorMessage | default(''))"
+  changed_when: pypi_group_result.status in [201, 204]
   tags: [configure, pypi]
