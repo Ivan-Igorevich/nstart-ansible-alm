@@ -1,19 +1,25 @@
 ---
 # === 1. Очистка (должна быть сделана заранее через --tags purge) ===
+- name: Ensure install directory exists
+  file:
+    path: "{{ nexus_install_dir }}"
+    state: directory
+    mode: '0755'
+
 - name: Ensure required directories exist
   file:
     path: "{{ item }}"
     state: directory
     mode: '0755'
   loop:
-    - ./nexus-data
-    - ./nexus-nginx-data
+    - "{{ nexus_install_dir }}/nexus-data"
+    - "{{ nexus_install_dir }}/nexus-nginx-data"
 
 # === 2. Создать admin.password ДО запуска контейнера ===
 - name: Create admin.password for initial setup
   copy:
     content: "{{ nexus_password }}"
-    dest: "./nexus-data/admin.password"
+    dest: "{{ nexus_install_dir }}/nexus-data/admin.password"
     mode: '0600'
 
 - name: Copy nginx.conf and docker-compose.yml
@@ -22,14 +28,14 @@
     dest: "{{ item.dest }}"
     mode: '0644'
   loop:
-    - { src: "nginx.conf", dest: "./nginx.conf" }
-    - { src: "docker-compose.yml", dest: "./docker-compose.yml" }
+    - { src: "nginx.conf", dest: "{{ nexus_install_dir }}/nginx.conf" }
+    - { src: "docker-compose.yml", dest: "{{ nexus_install_dir }}/docker-compose.yml" }
 
 # === 3. Запустить контейнер ВПЕРВЫЕ ===
 - name: Start Nexus and Nginx via docker-compose
   command: docker compose up -d
   args:
-    chdir: "{{ playbook_dir }}"
+    chdir: "{{ nexus_install_dir }}"
   register: compose_up
   changed_when: compose_up.stdout != ""
 
@@ -51,7 +57,7 @@
 # === 5. Удалить admin.password (безопасность) ===
 - name: Remove admin.password after first start
   file:
-    path: "./nexus-data/admin.password"
+    path: "{{ nexus_install_dir }}/nexus-data/admin.password"
     state: absent
 
 # === 6. Включить анонимный доступ ===
