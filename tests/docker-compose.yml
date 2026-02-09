@@ -1,0 +1,44 @@
+services:
+  nexus:
+    container_name: nexus-test
+    user: root
+    image: sonatype/nexus3:3.83.0
+    volumes:
+      - nexus-data:/nexus-data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/service/rest/v1/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  nginx:
+    container_name: nginx-test
+    image: nginx:1.27-alpine
+    depends_on:
+      nexus:
+        condition: service_healthy
+    ports:
+      - "8085:80"
+    volumes:
+      - ../nginx.conf:/etc/nginx/nginx.conf:ro
+
+  test-bootstrap:
+    container_name: test-bootstrap
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      nginx:
+        condition: service_started
+      nexus:
+        condition: service_healthy
+    environment:
+      NEXUS_URL: "http://nginx:80"
+      NEXUS_ADMIN_USER: "admin"
+      NEXUS_ADMIN_PASSWORD: "admin123"
+    volumes:
+      - nexus-data:/nexus-data:ro
+
+volumes:
+  nexus-data:
