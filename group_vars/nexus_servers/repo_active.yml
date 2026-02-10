@@ -35,6 +35,7 @@ nexus_active_repositories:
   - "apt-rabbitmq-server"
   - "apt-rabbitmq-erlang"
   - "apt-toolchain-r"
+  - "ansible-galaxy"
   - "huggingface-proxy"
 
 nexus_repositories_to_delete:

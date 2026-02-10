@@ -1,25 +1,26 @@
 ---
 - name: Get list of existing blob stores
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/blobstores"
     method: GET
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    return_content: yes
+    return_content: true
   register: existing_blobs
+  no_log: true
   changed_when: false
 
 - name: Create missing blob stores
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/blobstores/file"
     method: POST
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 204,400
+    status_code: [204, 400]
     body_format: json
     body:
       name: "{{ item.name }}"
@@ -30,4 +31,6 @@
   vars:
     existing_names: "{{ existing_blobs.json | map(attribute='name') | list | default([]) }}"
   when: item.name not in existing_names
-  changed_when: false
+  register: blobstore_result
+  no_log: true
+  changed_when: blobstore_result.status == 204

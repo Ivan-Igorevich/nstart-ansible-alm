@@ -2,15 +2,19 @@ services:
   nexus:
     container_name: nexus
     user: root
-    image: sonatype/nexus3:latest
+    # Фиксированная версия вместо latest: гарантирует воспроизводимость деплоя,
+    # исключает неожиданные breaking changes при пересоздании контейнера,
+    # и привязана к поддержке path-based Docker routing (доступно с 3.70+)
+    image: sonatype/nexus3:3.83.0
+    restart: always
     volumes:
       - ./nexus-data:/nexus-data
   nginx:
     container_name: nginx-server
-    image: nginx
+    image: nginx:1.27-alpine
     restart: always
     ports:
-      - 8085:80
+      - 8081:80
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ./nexus-nginx-data:/var/www/html

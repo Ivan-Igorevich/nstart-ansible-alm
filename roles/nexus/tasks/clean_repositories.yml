@@ -1,29 +1,32 @@
 ---
 - name: Get list of all repositories
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories"
     method: GET
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    return_content: yes
+    return_content: true
   register: all_repos
+  no_log: true
   changed_when: false
   tags: [configure, clean]
 
 - name: Delete specified repositories
-  uri:
+  ansible.builtin.uri:
     url: "{{ nexus_url }}/service/rest/v1/repositories/{{ item }}"
     method: DELETE
     user: "{{ nexus_user }}"
     password: "{{ nexus_password }}"
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: "{{ ssl_validate }}"
-    status_code: 204,404
+    status_code: [204, 404]
   loop: "{{ nexus_repositories_to_delete | default([]) }}"
   vars:
     existing_names: "{{ all_repos.json | map(attribute='name') | list | default([]) }}"
   when: item in existing_names
-  changed_when: false
+  register: delete_result
+  no_log: true
+  changed_when: delete_result.status == 204
   tags: [configure, clean]

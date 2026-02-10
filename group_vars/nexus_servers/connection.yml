@@ -2,3 +2,6 @@
 nexus_url: "https://nexus.nstest.local"
 nexus_user: "admin"
 ssl_validate: false
+
+# Каталог установки Nexus на целевом хосте
+nexus_install_dir: "/opt/nexus"

@@ -1,20 +1,16 @@
 ---
 - name: Stop and remove Nexus containers
-  command: docker compose down
-  args:
-    chdir: "{{ playbook_dir }}"
-  register: compose_down
-  changed_when: compose_down.stdout != ""
-  ignore_errors: yes  # Игнорируем, если контейнеров нет
+  community.docker.docker_compose_v2:
+    project_src: "{{ nexus_install_dir }}"
+    state: absent
+  ignore_errors: true
 
 - name: Remove Nexus data directory
-  file:
-    path: ./nexus-data
+  ansible.builtin.file:
+    path: "{{ nexus_install_dir }}/nexus-data"
     state: absent
-  changed_when: true
 
 - name: Remove Nginx data directory
-  file:
-    path: ./nexus-nginx-data
+  ansible.builtin.file:
+    path: "{{ nexus_install_dir }}/nexus-nginx-data"
     state: absent
-  changed_when: true
