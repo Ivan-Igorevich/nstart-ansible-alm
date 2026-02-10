@@ -2,6 +2,9 @@ services:
   nexus:
     container_name: nexus
     user: root
+    # Фиксированная версия вместо latest: гарантирует воспроизводимость деплоя,
+    # исключает неожиданные breaking changes при пересоздании контейнера,
+    # и привязана к поддержке path-based Docker routing (доступно с 3.70+)
     image: sonatype/nexus3:3.83.0
     restart: always
     volumes:

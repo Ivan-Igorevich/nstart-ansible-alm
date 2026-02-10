@@ -4,6 +4,4 @@ nexus_user: "admin"
 ssl_validate: false
 
 # Каталог установки Nexus на целевом хосте
-# По умолчанию {{ playbook_dir }} — работает для localhost
-# Для удалённых хостов переопределите через host_vars или inventory
-nexus_install_dir: "{{ playbook_dir }}"
+nexus_install_dir: "/opt/nexus"
